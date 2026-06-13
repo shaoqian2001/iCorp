@@ -121,7 +121,7 @@ touches the data layer). Status is kept current here as work lands.
     inline add/edit, status chips, and archive (cascading soft delete)
 - **Milestone 4 — Tasks** ✅ done
   - Three-column kanban (todo / doing / done); move tasks across columns
-- **Milestone 5 — Roadmap**
+- **Milestone 5 — Roadmap** ✅ done
   - Milestones on a horizontal timeline grouped by project; quarter and
     half-year zoom
 - **Milestone 6 — Weekly review**
