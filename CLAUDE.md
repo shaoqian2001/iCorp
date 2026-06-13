@@ -97,9 +97,44 @@ Layout: MUI app shell — permanent nav drawer on desktop, bottom navigation on 
 - A fresh browser profile gets seed data that demonstrates every feature
 - `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test` all pass
 
+## Milestones
+
+Demo v1 ships as ordered milestones. Each is a working, committed increment
+that passes `pnpm typecheck` and `pnpm lint` (and `pnpm test` whenever it
+touches the data layer). Status is kept current here as work lands.
+
+- **Milestone 1 — Foundation & data layer** ✅ done
+  - Next.js (App Router, `src/`) + TypeScript strict + MUI scaffold with a
+    light/dark CSS-variables theme
+  - Data layer: Zod schemas (single source of truth), repository interfaces, a
+    Dexie implementation behind a composition root, soft deletes, and versioned
+    JSON export/import — all sync-ready
+  - First-run seed covering every feature; Vitest data-layer tests
+  - Live dashboard (today's tasks · active quarter goals · next milestone)
+    reading through repositories with `useLiveQuery`
+- **Milestone 2 — App shell & navigation**
+  - MUI app shell: permanent nav drawer on desktop, bottom navigation on mobile
+  - All section routes scaffolded with designed placeholder/empty states
+  - Manual light/dark mode toggle
+- **Milestone 3 — Goals**
+  - 3-level tree (north star → long-term → quarter) with expand/collapse,
+    inline add/edit, status chips, and archive (soft delete)
+- **Milestone 4 — Tasks**
+  - Three-column kanban (todo / doing / done); move tasks across columns
+- **Milestone 5 — Roadmap**
+  - Milestones on a horizontal timeline grouped by project; quarter and
+    half-year zoom
+- **Milestone 6 — Weekly review**
+  - Guided flow (wins / blockers / lessons / next focus) saved as entries, with
+    browsable history
+- **Milestone 7 — Settings & data portability**
+  - Export JSON, import JSON (Zod-validated), reset & reseed
+- **Milestone 8 — Polish & definition-of-done pass**
+  - Dashboard/empty-state refinement and the full Definition-of-done checklist
+
 ## Working style
 
 - Before any large change, present a short plan with the files you'll touch; wait for approval on the initial scaffold plan
-- Build order: data layer + seed → app shell + theme → goals → tasks → dashboard → roadmap → review → settings/export
+- Build order: follow the numbered Milestones above (foundation + data → app shell → goals → tasks → roadmap → review → settings → polish)
 - Prefer the dependencies listed above; if you must add one, state why in the commit message
 - Update this file whenever an architecture decision changes
