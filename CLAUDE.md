@@ -124,7 +124,7 @@ touches the data layer). Status is kept current here as work lands.
 - **Milestone 5 — Roadmap** ✅ done
   - Milestones on a horizontal timeline grouped by project; quarter and
     half-year zoom
-- **Milestone 6 — Weekly review**
+- **Milestone 6 — Weekly review** ✅ done
   - Guided flow (wins / blockers / lessons / next focus) saved as entries, with
     browsable history
 - **Milestone 7 — Settings & data portability**
