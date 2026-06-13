@@ -1,0 +1,7 @@
+# pnpm settings live here in newer pnpm versions (the package.json "pnpm"
+# field is no longer read). These native packages are allowed to run their
+# install/build scripts: esbuild (Vitest), sharp (Next), unrs-resolver (ESLint).
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver
