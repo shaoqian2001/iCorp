@@ -41,3 +41,9 @@ export {
   importDatabaseFromJson,
 } from "./export-import";
 export type { ExportFile } from "./export-import";
+export {
+  ensureSeeded,
+  isDatabaseEmpty,
+  resetAndReseed,
+  seedDatabase,
+} from "./seed";
