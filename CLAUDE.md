@@ -112,13 +112,13 @@ touches the data layer). Status is kept current here as work lands.
   - First-run seed covering every feature; Vitest data-layer tests
   - Live dashboard (today's tasks · active quarter goals · next milestone)
     reading through repositories with `useLiveQuery`
-- **Milestone 2 — App shell & navigation**
+- **Milestone 2 — App shell & navigation** ✅ done
   - MUI app shell: permanent nav drawer on desktop, bottom navigation on mobile
   - All section routes scaffolded with designed placeholder/empty states
   - Manual light/dark mode toggle
-- **Milestone 3 — Goals**
+- **Milestone 3 — Goals** ✅ done
   - 3-level tree (north star → long-term → quarter) with expand/collapse,
-    inline add/edit, status chips, and archive (soft delete)
+    inline add/edit, status chips, and archive (cascading soft delete)
 - **Milestone 4 — Tasks**
   - Three-column kanban (todo / doing / done); move tasks across columns
 - **Milestone 5 — Roadmap**
