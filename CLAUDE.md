@@ -127,7 +127,7 @@ touches the data layer). Status is kept current here as work lands.
 - **Milestone 6 — Weekly review** ✅ done
   - Guided flow (wins / blockers / lessons / next focus) saved as entries, with
     browsable history
-- **Milestone 7 — Settings & data portability**
+- **Milestone 7 — Settings & data portability** ✅ done
   - Export JSON, import JSON (Zod-validated), reset & reseed
 - **Milestone 8 — Polish & definition-of-done pass**
   - Dashboard/empty-state refinement and the full Definition-of-done checklist
