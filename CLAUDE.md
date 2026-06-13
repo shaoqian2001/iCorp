@@ -119,7 +119,7 @@ touches the data layer). Status is kept current here as work lands.
 - **Milestone 3 — Goals** ✅ done
   - 3-level tree (north star → long-term → quarter) with expand/collapse,
     inline add/edit, status chips, and archive (cascading soft delete)
-- **Milestone 4 — Tasks**
+- **Milestone 4 — Tasks** ✅ done
   - Three-column kanban (todo / doing / done); move tasks across columns
 - **Milestone 5 — Roadmap**
   - Milestones on a horizontal timeline grouped by project; quarter and
