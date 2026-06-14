@@ -3,6 +3,7 @@ import {
   DexieMilestoneRepository,
   DexieProjectRepository,
   DexieReviewRepository,
+  DexieSourceRepository,
   DexieTaskRepository,
 } from "./dexie/repositories";
 import type {
@@ -10,6 +11,7 @@ import type {
   MilestoneRepository,
   ProjectRepository,
   ReviewRepository,
+  SourceRepository,
   TaskRepository,
 } from "./repositories";
 
@@ -23,6 +25,7 @@ export const milestoneRepository: MilestoneRepository =
   new DexieMilestoneRepository();
 export const taskRepository: TaskRepository = new DexieTaskRepository();
 export const reviewRepository: ReviewRepository = new DexieReviewRepository();
+export const sourceRepository: SourceRepository = new DexieSourceRepository();
 
 export * from "./schemas";
 export type {
@@ -31,6 +34,7 @@ export type {
   MilestoneRepository,
   ProjectRepository,
   ReviewRepository,
+  SourceRepository,
   TaskRepository,
 } from "./repositories";
 export {

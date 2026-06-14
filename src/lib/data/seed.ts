@@ -5,6 +5,7 @@ import {
   milestoneRepository,
   projectRepository,
   reviewRepository,
+  sourceRepository,
   taskRepository,
 } from "./index";
 import type { TaskInput } from "./schemas";
@@ -88,19 +89,48 @@ export async function seedDatabase(): Promise<void> {
     title: "MVP Launch",
     description: "Ship the first public version and onboard early users.",
     status: "active",
+    type: "business",
   });
   const pResearch = await projectRepository.create({
     goalId: qPricing.id,
-    title: "Customer Research",
-    description: "Talk to users, understand willingness to pay.",
+    title: "Customer & Pricing Research",
+    description: "Talk to users, review the literature, understand willingness to pay.",
     status: "active",
+    type: "research",
   });
   const pContent = await projectRepository.create({
     goalId: qContent.id,
     title: "Content Engine",
     description: "A repeatable pipeline for publishing technical articles.",
     status: "active",
+    type: "personal",
   });
+
+  // Research sources for the research project (reading list / references).
+  await Promise.all([
+    sourceRepository.create({
+      projectId: pResearch.id,
+      title: "The Mom Test",
+      authors: "Rob Fitzpatrick",
+      kind: "book",
+      status: "reading",
+      notes: "How to talk to customers without biasing the answers.",
+    }),
+    sourceRepository.create({
+      projectId: pResearch.id,
+      title: "Jobs to be Done: a framework for customer needs",
+      url: "https://hbr.org/2016/09/know-your-customers-jobs-to-be-done",
+      kind: "article",
+      status: "read",
+    }),
+    sourceRepository.create({
+      projectId: pResearch.id,
+      title: "Van Westendorp price sensitivity meter",
+      kind: "paper",
+      status: "to_read",
+      notes: "Method for finding an acceptable price range.",
+    }),
+  ]);
 
   // --- Milestones: a mix of hit (past) and planned (future) ----------------
   await Promise.all([

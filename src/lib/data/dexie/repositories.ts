@@ -9,6 +9,8 @@ import {
   projectSchema,
   reviewEntryInputSchema,
   reviewEntrySchema,
+  sourceInputSchema,
+  sourceSchema,
   taskInputSchema,
   taskSchema,
 } from "../schemas";
@@ -22,6 +24,8 @@ import type {
   ProjectInput,
   ReviewEntry,
   ReviewEntryInput,
+  Source,
+  SourceInput,
   Task,
   TaskInput,
   TaskStatus,
@@ -31,6 +35,7 @@ import type {
   MilestoneRepository,
   ProjectRepository,
   ReviewRepository,
+  SourceRepository,
   TaskRepository,
 } from "../repositories";
 
@@ -162,6 +167,21 @@ export class DexieReviewRepository
   getByWeek(weekStart: string): Promise<ReviewEntry | undefined> {
     return this.list().then((entries) =>
       entries.find((entry) => entry.weekStart === weekStart),
+    );
+  }
+}
+
+export class DexieSourceRepository
+  extends DexieRepository<Source, SourceInput>
+  implements SourceRepository
+{
+  constructor() {
+    super(db.sources, sourceInputSchema, sourceSchema);
+  }
+
+  listByProject(projectId: string): Promise<Source[]> {
+    return this.list().then((sources) =>
+      sources.filter((source) => source.projectId === projectId),
     );
   }
 }

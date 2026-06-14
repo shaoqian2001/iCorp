@@ -1,5 +1,12 @@
 import Dexie, { type Table } from "dexie";
-import type { Goal, Milestone, Project, ReviewEntry, Task } from "../schemas";
+import type {
+  Goal,
+  Milestone,
+  Project,
+  ReviewEntry,
+  Source,
+  Task,
+} from "../schemas";
 
 /**
  * The IndexedDB schema. This is the ONLY module that talks to Dexie's table
@@ -13,6 +20,7 @@ export class SoloStudioDB extends Dexie {
   milestones!: Table<Milestone, string>;
   tasks!: Table<Task, string>;
   reviews!: Table<ReviewEntry, string>;
+  sources!: Table<Source, string>;
 
   constructor() {
     super("solo-studio");
@@ -23,6 +31,24 @@ export class SoloStudioDB extends Dexie {
       tasks: "id, goalId, projectId, status, dueDate, sortOrder",
       reviews: "id, weekStart",
     });
+    // v2: project types + the research Sources table.
+    this.version(2)
+      .stores({
+        goals: "id, parentId, horizon, status, sortOrder",
+        projects: "id, goalId, status, type",
+        milestones: "id, projectId, date, status",
+        tasks: "id, goalId, projectId, status, dueDate, sortOrder",
+        reviews: "id, weekStart",
+        sources: "id, projectId, status, kind",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("projects")
+          .toCollection()
+          .modify((project: Partial<Project>) => {
+            if (project.type === undefined) project.type = "personal";
+          });
+      });
   }
 }
 

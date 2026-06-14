@@ -5,6 +5,7 @@ import {
   milestoneSchema,
   projectSchema,
   reviewEntrySchema,
+  sourceSchema,
   taskSchema,
 } from "./schemas";
 
@@ -24,23 +25,27 @@ export const exportFileSchema = z.object({
     milestones: z.array(milestoneSchema),
     tasks: z.array(taskSchema),
     reviews: z.array(reviewEntrySchema),
+    // default [] keeps older (pre-Sources) export files importable
+    sources: z.array(sourceSchema).default([]),
   }),
 });
 
 export type ExportFile = z.infer<typeof exportFileSchema>;
 
 export async function exportDatabase(): Promise<ExportFile> {
-  const [goals, projects, milestones, tasks, reviews] = await Promise.all([
-    db.goals.toArray(),
-    db.projects.toArray(),
-    db.milestones.toArray(),
-    db.tasks.toArray(),
-    db.reviews.toArray(),
-  ]);
+  const [goals, projects, milestones, tasks, reviews, sources] =
+    await Promise.all([
+      db.goals.toArray(),
+      db.projects.toArray(),
+      db.milestones.toArray(),
+      db.tasks.toArray(),
+      db.reviews.toArray(),
+      db.sources.toArray(),
+    ]);
   return {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
-    data: { goals, projects, milestones, tasks, reviews },
+    data: { goals, projects, milestones, tasks, reviews, sources },
   };
 }
 
@@ -48,7 +53,7 @@ export async function importDatabase(raw: unknown): Promise<void> {
   const snapshot = exportFileSchema.parse(raw);
   await db.transaction(
     "rw",
-    [db.goals, db.projects, db.milestones, db.tasks, db.reviews],
+    [db.goals, db.projects, db.milestones, db.tasks, db.reviews, db.sources],
     async () => {
       await Promise.all([
         db.goals.clear(),
@@ -56,6 +61,7 @@ export async function importDatabase(raw: unknown): Promise<void> {
         db.milestones.clear(),
         db.tasks.clear(),
         db.reviews.clear(),
+        db.sources.clear(),
       ]);
       await Promise.all([
         db.goals.bulkAdd(snapshot.data.goals),
@@ -63,6 +69,7 @@ export async function importDatabase(raw: unknown): Promise<void> {
         db.milestones.bulkAdd(snapshot.data.milestones),
         db.tasks.bulkAdd(snapshot.data.tasks),
         db.reviews.bulkAdd(snapshot.data.reviews),
+        db.sources.bulkAdd(snapshot.data.sources),
       ]);
     },
   );

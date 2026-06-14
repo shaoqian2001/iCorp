@@ -1,39 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import NextLink from "next/link";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import {
   goalRepository,
   milestoneRepository,
   projectRepository,
   taskRepository,
   type ProjectStatus,
+  type ProjectType,
 } from "@/lib/data";
 import {
   PROJECT_STATUSES,
   PROJECT_STATUS_COLOR,
   PROJECT_STATUS_LABEL,
+  PROJECT_TYPES,
+  PROJECT_TYPE_COLOR,
+  PROJECT_TYPE_LABEL,
+  STARTER_TASKS,
 } from "./projectMeta";
 
 interface Draft {
@@ -41,15 +53,25 @@ interface Draft {
   title: string;
   description: string;
   status: ProjectStatus;
+  type: ProjectType;
   goalId: string | null;
+  starterTasks: boolean;
 }
 
 const NEW_DRAFT: Draft = {
   title: "",
   description: "",
   status: "active",
+  type: "personal",
   goalId: null,
+  starterTasks: false,
 };
+
+export function typeIcon(type: ProjectType): ReactElement {
+  if (type === "research") return <ScienceOutlinedIcon fontSize="small" />;
+  if (type === "business") return <BusinessCenterOutlinedIcon fontSize="small" />;
+  return <PersonOutlineIcon fontSize="small" />;
+}
 
 export function ProjectsView() {
   const projects = useLiveQuery(() => projectRepository.list(), []);
@@ -57,6 +79,7 @@ export function ProjectsView() {
   const milestones = useLiveQuery(() => milestoneRepository.list(), []);
   const goals = useLiveQuery(() => goalRepository.list(), []);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [typeFilter, setTypeFilter] = useState<ProjectType | "all">("all");
 
   const goalTitle = (goalId: string | null) =>
     goalId ? (goals ?? []).find((g) => g.id === goalId)?.title : undefined;
@@ -73,15 +96,32 @@ export function ProjectsView() {
       title: draft.title.trim(),
       description: draft.description.trim() || undefined,
       status: draft.status,
+      type: draft.type,
       goalId: draft.goalId,
     };
-    if (draft.id) await projectRepository.update(draft.id, payload);
-    else await projectRepository.create(payload);
+    if (draft.id) {
+      await projectRepository.update(draft.id, payload);
+    } else {
+      const created = await projectRepository.create(payload);
+      if (draft.starterTasks) {
+        await Promise.all(
+          STARTER_TASKS[draft.type].map((title, index) =>
+            taskRepository.create({
+              projectId: created.id,
+              title,
+              status: "todo",
+              sortOrder: index,
+            }),
+          ),
+        );
+      }
+    }
     setDraft(null);
   };
 
   const ordered = (projects ?? [])
     .slice()
+    .filter((p) => typeFilter === "all" || p.type === typeFilter)
     .sort((a, b) => a.title.localeCompare(b.title));
 
   return (
@@ -90,7 +130,7 @@ export function ProjectsView() {
         direction="row"
         justifyContent="space-between"
         alignItems="flex-end"
-        sx={{ mb: 4 }}
+        sx={{ mb: 3 }}
       >
         <Stack spacing={0.5}>
           <Typography variant="overline" color="primary">
@@ -103,28 +143,40 @@ export function ProjectsView() {
             Each project gathers its own tasks, milestones, and goal.
           </Typography>
         </Stack>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setDraft({ ...NEW_DRAFT })}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDraft({ ...NEW_DRAFT })}>
           New project
         </Button>
       </Stack>
+
+      <ToggleButtonGroup
+        size="small"
+        exclusive
+        value={typeFilter}
+        onChange={(_, next: ProjectType | "all" | null) => {
+          if (next) setTypeFilter(next);
+        }}
+        sx={{ mb: 3 }}
+        aria-label="Filter by project type"
+      >
+        <ToggleButton value="all">All</ToggleButton>
+        {PROJECT_TYPES.map((type) => (
+          <ToggleButton key={type} value={type}>
+            {PROJECT_TYPE_LABEL[type]}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
 
       {projects === undefined ? (
         <Typography color="text.secondary">Loading…</Typography>
       ) : ordered.length === 0 ? (
         <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
           <Typography sx={{ mb: 2 }}>
-            No projects yet. Create one to start organizing your work.
+            {typeFilter === "all"
+              ? "No projects yet. Create one to start organizing your work."
+              : `No ${PROJECT_TYPE_LABEL[typeFilter].toLowerCase()} projects yet.`}
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setDraft({ ...NEW_DRAFT })}
-          >
-            Create your first project
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDraft({ ...NEW_DRAFT })}>
+            Create a project
           </Button>
         </Paper>
       ) : (
@@ -140,12 +192,7 @@ export function ProjectsView() {
             return (
               <Card key={project.id} variant="outlined">
                 <CardContent>
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="flex-start"
-                    spacing={1}
-                  >
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
                     <Typography
                       variant="h6"
                       component={NextLink}
@@ -165,50 +212,26 @@ export function ProjectsView() {
                     />
                   </Stack>
                   {project.description ? (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                       {project.description}
                     </Typography>
                   ) : null}
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    flexWrap="wrap"
-                    useFlexGap
-                    sx={{ mt: 1.5 }}
-                  >
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
+                    <Chip
+                      size="small"
+                      icon={typeIcon(project.type)}
+                      label={PROJECT_TYPE_LABEL[project.type]}
+                      color={PROJECT_TYPE_COLOR[project.type]}
+                      variant="outlined"
+                    />
                     {goalTitle(project.goalId) ? (
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`Goal: ${goalTitle(project.goalId)}`}
-                      />
+                      <Chip size="small" variant="outlined" label={`Goal: ${goalTitle(project.goalId)}`} />
                     ) : null}
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={`${stats.done}/${stats.total} tasks`}
-                    />
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={`${milestoneCount(project.id)} milestones`}
-                    />
+                    <Chip size="small" variant="outlined" label={`${stats.done}/${stats.total} tasks`} />
+                    <Chip size="small" variant="outlined" label={`${milestoneCount(project.id)} milestones`} />
                   </Stack>
-                  <Stack
-                    direction="row"
-                    justifyContent="flex-end"
-                    alignItems="center"
-                    sx={{ mt: 1 }}
-                  >
-                    <Button
-                      size="small"
-                      component={NextLink}
-                      href={`/projects/${project.id}`}
-                    >
+                  <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 1 }}>
+                    <Button size="small" component={NextLink} href={`/projects/${project.id}`}>
                       Open
                     </Button>
                     <Tooltip title="Edit">
@@ -220,7 +243,9 @@ export function ProjectsView() {
                             title: project.title,
                             description: project.description ?? "",
                             status: project.status,
+                            type: project.type,
                             goalId: project.goalId,
+                            starterTasks: false,
                           })
                         }
                         aria-label="Edit project"
@@ -245,12 +270,7 @@ export function ProjectsView() {
         </Box>
       )}
 
-      <Dialog
-        open={draft !== null}
-        onClose={() => setDraft(null)}
-        fullWidth
-        maxWidth="sm"
-      >
+      <Dialog open={draft !== null} onClose={() => setDraft(null)} fullWidth maxWidth="sm">
         <DialogTitle>{draft?.id ? "Edit project" : "New project"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -259,9 +279,7 @@ export function ProjectsView() {
               fullWidth
               autoFocus
               value={draft?.title ?? ""}
-              onChange={(e) =>
-                setDraft((d) => (d ? { ...d, title: e.target.value } : d))
-              }
+              onChange={(e) => setDraft((d) => (d ? { ...d, title: e.target.value } : d))}
             />
             <TextField
               label="Description"
@@ -269,35 +287,45 @@ export function ProjectsView() {
               multiline
               minRows={2}
               value={draft?.description ?? ""}
-              onChange={(e) =>
-                setDraft((d) => (d ? { ...d, description: e.target.value } : d))
-              }
+              onChange={(e) => setDraft((d) => (d ? { ...d, description: e.target.value } : d))}
             />
-            <TextField
-              select
-              label="Status"
-              value={draft?.status ?? "active"}
-              onChange={(e) =>
-                setDraft((d) =>
-                  d ? { ...d, status: e.target.value as ProjectStatus } : d,
-                )
-              }
-            >
-              {PROJECT_STATUSES.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {PROJECT_STATUS_LABEL[status]}
-                </MenuItem>
-              ))}
-            </TextField>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                select
+                label="Type"
+                fullWidth
+                value={draft?.type ?? "personal"}
+                onChange={(e) =>
+                  setDraft((d) => (d ? { ...d, type: e.target.value as ProjectType } : d))
+                }
+              >
+                {PROJECT_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {PROJECT_TYPE_LABEL[type]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Status"
+                fullWidth
+                value={draft?.status ?? "active"}
+                onChange={(e) =>
+                  setDraft((d) => (d ? { ...d, status: e.target.value as ProjectStatus } : d))
+                }
+              >
+                {PROJECT_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {PROJECT_STATUS_LABEL[status]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
             <TextField
               select
               label="Linked goal"
               value={draft?.goalId ?? ""}
-              onChange={(e) =>
-                setDraft((d) =>
-                  d ? { ...d, goalId: e.target.value || null } : d,
-                )
-              }
+              onChange={(e) => setDraft((d) => (d ? { ...d, goalId: e.target.value || null } : d))}
             >
               <MenuItem value="">None</MenuItem>
               {(goals ?? []).map((goal) => (
@@ -306,15 +334,24 @@ export function ProjectsView() {
                 </MenuItem>
               ))}
             </TextField>
+            {draft && !draft.id ? (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={draft.starterTasks}
+                    onChange={(e) =>
+                      setDraft((d) => (d ? { ...d, starterTasks: e.target.checked } : d))
+                    }
+                  />
+                }
+                label={`Add starter tasks for a ${PROJECT_TYPE_LABEL[draft.type].toLowerCase()} project`}
+              />
+            ) : null}
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDraft(null)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={() => void save()}
-            disabled={!draft?.title.trim()}
-          >
+          <Button variant="contained" onClick={() => void save()} disabled={!draft?.title.trim()}>
             {draft?.id ? "Save" : "Create"}
           </Button>
         </DialogActions>

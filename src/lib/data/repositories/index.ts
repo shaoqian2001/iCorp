@@ -8,6 +8,8 @@ import type {
   ProjectInput,
   ReviewEntry,
   ReviewEntryInput,
+  Source,
+  SourceInput,
   Task,
   TaskInput,
   TaskStatus,
@@ -51,4 +53,8 @@ export interface TaskRepository extends Repository<Task, TaskInput> {
 
 export interface ReviewRepository extends Repository<ReviewEntry, ReviewEntryInput> {
   getByWeek(weekStart: string): Promise<ReviewEntry | undefined>;
+}
+
+export interface SourceRepository extends Repository<Source, SourceInput> {
+  listByProject(projectId: string): Promise<Source[]>;
 }

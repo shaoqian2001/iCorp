@@ -7,6 +7,7 @@ import {
   milestoneRepository,
   projectRepository,
   reviewRepository,
+  sourceRepository,
   taskRepository,
 } from "../index";
 
@@ -26,6 +27,13 @@ async function seedSample(): Promise<void> {
     goalId: northStar.id,
     title: "Project",
     status: "active",
+    type: "research",
+  });
+  await sourceRepository.create({
+    projectId: project.id,
+    title: "A source",
+    kind: "paper",
+    status: "reading",
   });
   await milestoneRepository.create({
     projectId: project.id,

@@ -4,6 +4,7 @@ import {
   milestoneRepository,
   projectRepository,
   reviewRepository,
+  sourceRepository,
   taskRepository,
   type GoalHorizon,
 } from "@/lib/data";
@@ -21,13 +22,15 @@ const HORIZON_LABEL: Record<GoalHorizon, string> = {
  * so the server never reads app data.
  */
 export async function buildWorkspaceContext(): Promise<string> {
-  const [goals, projects, tasks, milestones, reviews] = await Promise.all([
-    goalRepository.list(),
-    projectRepository.list(),
-    taskRepository.list(),
-    milestoneRepository.list(),
-    reviewRepository.list(),
-  ]);
+  const [goals, projects, tasks, milestones, reviews, sources] =
+    await Promise.all([
+      goalRepository.list(),
+      projectRepository.list(),
+      taskRepository.list(),
+      milestoneRepository.list(),
+      reviewRepository.list(),
+      sourceRepository.list(),
+    ]);
 
   const todayIso = format(new Date(), "yyyy-MM-dd");
   const lines: string[] = [];
@@ -56,11 +59,28 @@ export async function buildWorkspaceContext(): Promise<string> {
       const projectTasks = tasks.filter((t) => t.projectId === project.id);
       const done = projectTasks.filter((t) => t.status === "done").length;
       lines.push(
-        `- [${project.status}] ${project.title} — ${done}/${projectTasks.length} tasks done`,
+        `- [${project.status} · ${project.type}] ${project.title} — ${done}/${projectTasks.length} tasks done`,
       );
     }
   }
   lines.push("");
+
+  const researchProjects = projects.filter((p) => p.type === "research");
+  if (researchProjects.length > 0 && sources.length > 0) {
+    lines.push("### Research sources");
+    for (const project of researchProjects) {
+      const projectSources = sources.filter((s) => s.projectId === project.id);
+      if (projectSources.length === 0) continue;
+      lines.push(`${project.title}:`);
+      for (const source of projectSources) {
+        lines.push(
+          `- [${source.status}] ${source.title}` +
+            (source.authors ? ` (${source.authors})` : ""),
+        );
+      }
+    }
+    lines.push("");
+  }
 
   const dueToday = tasks.filter(
     (t) => t.dueDate === todayIso && t.status !== "done",

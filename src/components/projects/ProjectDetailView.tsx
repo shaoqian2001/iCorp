@@ -30,9 +30,18 @@ import {
   taskRepository,
   type MilestoneStatus,
   type ProjectStatus,
+  type ProjectType,
   type TaskStatus,
 } from "@/lib/data";
-import { PROJECT_STATUSES, PROJECT_STATUS_LABEL } from "./projectMeta";
+import {
+  PROJECT_STATUSES,
+  PROJECT_STATUS_LABEL,
+  PROJECT_TYPES,
+  PROJECT_TYPE_COLOR,
+  PROJECT_TYPE_LABEL,
+} from "./projectMeta";
+import { typeIcon } from "./ProjectsView";
+import { SourcesPanel } from "./SourcesPanel";
 import { TASK_COLUMNS } from "@/components/tasks/taskMeta";
 
 const MILESTONE_STATUSES: MilestoneStatus[] = ["planned", "hit", "missed"];
@@ -187,6 +196,16 @@ export function ProjectDetailView({ id }: { id: string }) {
         )}
       </Stack>
 
+      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+        <Chip
+          size="small"
+          icon={typeIcon(project.type)}
+          label={PROJECT_TYPE_LABEL[project.type]}
+          color={PROJECT_TYPE_COLOR[project.type]}
+          variant="outlined"
+        />
+      </Stack>
+
       {project.description ? (
         <Typography color="text.secondary" sx={{ mb: 2 }}>
           {project.description}
@@ -198,6 +217,24 @@ export function ProjectDetailView({ id }: { id: string }) {
         spacing={2}
         sx={{ mb: 4 }}
       >
+        <TextField
+          select
+          size="small"
+          label="Type"
+          value={project.type}
+          onChange={(e) =>
+            void projectRepository.update(project.id, {
+              type: e.target.value as ProjectType,
+            })
+          }
+          sx={{ minWidth: 150 }}
+        >
+          {PROJECT_TYPES.map((type) => (
+            <MenuItem key={type} value={type}>
+              {PROJECT_TYPE_LABEL[type]}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
           select
           size="small"
@@ -236,6 +273,12 @@ export function ProjectDetailView({ id }: { id: string }) {
           ))}
         </TextField>
       </Stack>
+
+      {project.type === "research" ? (
+        <Box sx={{ mb: 4 }}>
+          <SourcesPanel projectId={project.id} />
+        </Box>
+      ) : null}
 
       <Typography variant="h6" gutterBottom>
         Roadmap &amp; milestones

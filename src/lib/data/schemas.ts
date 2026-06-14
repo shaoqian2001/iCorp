@@ -30,14 +30,27 @@ const SYNC_OMIT = {
 export const goalHorizonSchema = z.enum(["north_star", "long_term", "quarter"]);
 export const goalStatusSchema = z.enum(["active", "achieved", "paused", "dropped"]);
 export const projectStatusSchema = z.enum(["active", "done", "paused"]);
+export const projectTypeSchema = z.enum(["personal", "business", "research"]);
 export const milestoneStatusSchema = z.enum(["planned", "hit", "missed"]);
 export const taskStatusSchema = z.enum(["todo", "doing", "done"]);
+export const sourceKindSchema = z.enum([
+  "paper",
+  "article",
+  "book",
+  "dataset",
+  "web",
+  "other",
+]);
+export const sourceStatusSchema = z.enum(["to_read", "reading", "read"]);
 
 export type GoalHorizon = z.infer<typeof goalHorizonSchema>;
 export type GoalStatus = z.infer<typeof goalStatusSchema>;
 export type ProjectStatus = z.infer<typeof projectStatusSchema>;
+export type ProjectType = z.infer<typeof projectTypeSchema>;
 export type MilestoneStatus = z.infer<typeof milestoneStatusSchema>;
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
+export type SourceKind = z.infer<typeof sourceKindSchema>;
+export type SourceStatus = z.infer<typeof sourceStatusSchema>;
 
 // --- Goal -------------------------------------------------------------------
 
@@ -92,6 +105,7 @@ const projectObject = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   status: projectStatusSchema,
+  type: projectTypeSchema.default("personal"),
 });
 
 export const projectSchema = projectObject;
@@ -151,3 +165,22 @@ export const reviewEntryInputSchema = reviewEntryObject.omit(SYNC_OMIT);
 
 export type ReviewEntry = z.infer<typeof reviewEntrySchema>;
 export type ReviewEntryInput = z.input<typeof reviewEntryInputSchema>;
+
+// --- Source (research reading list / references) ----------------------------
+
+const sourceObject = z.object({
+  ...syncFields,
+  projectId: z.string().uuid(),
+  title: z.string().min(1),
+  url: z.string().optional(),
+  authors: z.string().optional(),
+  kind: sourceKindSchema.default("article"),
+  status: sourceStatusSchema.default("to_read"),
+  notes: z.string().optional(),
+});
+
+export const sourceSchema = sourceObject;
+export const sourceInputSchema = sourceObject.omit(SYNC_OMIT);
+
+export type Source = z.infer<typeof sourceSchema>;
+export type SourceInput = z.input<typeof sourceInputSchema>;
