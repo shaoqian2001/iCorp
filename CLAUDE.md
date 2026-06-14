@@ -61,7 +61,8 @@ Tree depth for goals is exactly three levels (north_star → long_term → quart
 
 Routes (App Router):
 
-- `/` — Dashboard: today's tasks, active quarter goals, next milestone
+- `/` — Dashboard: projects overview graph, today's tasks, active quarter goals, next milestone
+- `/projects` — project list with create/edit/archive; `/projects/[id]` — project hub (its tasks, milestones, linked goal)
 - `/goals` — tree view with inline add/edit, expand/collapse, status chips
 - `/tasks` — three-column kanban (todo / doing / done)
 - `/roadmap` — milestone timeline grouped by project, quarter and half-year zoom
