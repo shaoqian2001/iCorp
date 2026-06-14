@@ -19,6 +19,7 @@ import {
   taskRepository,
   type TaskStatus,
 } from "@/lib/data";
+import { ProjectsOverview } from "./ProjectsOverview";
 
 const STATUS_COLOR: Record<TaskStatus, "default" | "info" | "success"> = {
   todo: "default",
@@ -74,6 +75,10 @@ export function DashboardView() {
           gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
         }}
       >
+        <Box sx={{ gridColumn: { md: "1 / -1" } }}>
+          <ProjectsOverview />
+        </Box>
+
         <Card variant="outlined" sx={{ gridColumn: { md: "1 / -1" } }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
