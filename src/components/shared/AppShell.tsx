@@ -25,6 +25,7 @@ import ViewKanbanOutlinedIcon from "@mui/icons-material/ViewKanbanOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { ColorModeToggle } from "./ColorModeToggle";
 
@@ -44,6 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/tasks", label: "Tasks", icon: <ViewKanbanOutlinedIcon /> },
   { href: "/roadmap", label: "Roadmap", icon: <TimelineOutlinedIcon /> },
   { href: "/review", label: "Review", icon: <RateReviewOutlinedIcon /> },
+  { href: "/assistant", label: "Assistant", icon: <AutoAwesomeOutlinedIcon /> },
   { href: "/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
 ];
 

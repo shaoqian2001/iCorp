@@ -18,12 +18,13 @@ In scope (this list is exhaustive — do not build features outside it):
 - Dashboard: today's tasks + active quarter goals + next upcoming milestone
 - Seed data on first run; JSON export/import; "reset & reseed" in settings
 - All data persists in the browser (IndexedDB) across reloads
+- AI assistant: chat with Claude about your workspace. Bring-your-own Anthropic API key (a pay-as-you-go key, not a Claude.ai subscription), stored only in the browser. A single localhost route (`/api/chat`) proxies to the Anthropic API; it is a stateless relay and never reads local app data — the workspace context is assembled client-side and passed in as the system prompt.
 
 Out of scope (do NOT build, even if it seems easy or tempting):
 
-- Backend of any kind: no API routes for data, no database servers, no ORMs (no Prisma, no Drizzle)
+- Backend for app data: no API routes that read/write the local store, no database servers, no ORMs (no Prisma, no Drizzle). The only server route is the stateless AI proxy above.
 - Auth, accounts, multi-user anything
-- Community/social features, payments, AI features, habits tracking
+- Community/social features, payments, habits tracking
 - Service worker / PWA install flow (deferred — adds friction with the dev server and isn't needed for a localhost demo)
 - Real sync. Dexie is the only persistence layer in this phase.
 
@@ -35,13 +36,14 @@ Out of scope (do NOT build, even if it seems easy or tempting):
 - Zod for schemas and validation — TS types derive from Zod via `z.infer`
 - Zustand only for ephemeral UI state (open dialogs, filters, view options); anything persistent lives in Dexie
 - date-fns for date math; `crypto.randomUUID()` for ids (no uuid package)
+- `@anthropic-ai/sdk` for the optional Claude assistant (used only in the `/api/chat` proxy route; BYO key)
 - pnpm as the package manager
 
 ## Architecture rules
 
 1. **The repository pattern is law.** All persistence goes through interfaces in `src/lib/data/repositories/` (e.g. `GoalRepository`, `TaskRepository`). UI components and hooks never import Dexie directly. The Dexie implementation lives in `src/lib/data/dexie/`. Reason: a later phase swaps Dexie for a PowerSync/SQLite client — that swap must only touch `src/lib/data/`.
 2. **Every record is sync-ready.** All tables share these fields: `id` (UUID string), `userId` (the constant `"local"` for now), `createdAt` + `updatedAt` (ISO strings), `deletedAt` (ISO string or null). Deletes are soft: set `deletedAt`, never remove rows. All queries filter out soft-deleted rows.
-3. **Client-side data, server-rendered shell.** Pages are thin RSC shells; everything that touches data is a client component. Never fetch or read app data on the server.
+3. **Client-side data, server-rendered shell.** Pages are thin RSC shells; everything that touches data is a client component. Never fetch or read app data on the server — including the `/api/chat` AI proxy, which receives its context from the client and never opens IndexedDB.
 4. One Zod schema per entity in `src/lib/data/schemas.ts` is the single source of truth. Mutations validate with Zod before writing and always bump `updatedAt`.
 5. Import/export must round-trip losslessly: export the full database to a single versioned JSON file; import validates with Zod and replaces local state.
 
@@ -67,6 +69,7 @@ Routes (App Router):
 - `/tasks` — three-column kanban (todo / doing / done)
 - `/roadmap` — milestone timeline grouped by project, quarter and half-year zoom
 - `/review` — start or continue this week's review; list of past entries
+- `/assistant` — chat with Claude about the workspace (BYO Anthropic key); backed by the `/api/chat` proxy route
 - `/settings` — export JSON, import JSON, reset & reseed
 
 Layout: MUI app shell — permanent nav drawer on desktop, bottom navigation on mobile widths.
