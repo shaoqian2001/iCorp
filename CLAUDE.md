@@ -18,12 +18,13 @@ In scope (this list is exhaustive — do not build features outside it):
 - Dashboard: today's tasks + active quarter goals + next upcoming milestone
 - Seed data on first run; JSON export/import; "reset & reseed" in settings
 - All data persists in the browser (IndexedDB) across reloads
+- AI assistant: chat with Claude about your workspace. Bring-your-own Anthropic API key (a pay-as-you-go key, not a Claude.ai subscription), stored only in the browser. A single localhost route (`/api/chat`) proxies to the Anthropic API; it is a stateless relay and never reads local app data — the workspace context is assembled client-side and passed in as the system prompt.
 
 Out of scope (do NOT build, even if it seems easy or tempting):
 
-- Backend of any kind: no API routes for data, no database servers, no ORMs (no Prisma, no Drizzle)
+- Backend for app data: no API routes that read/write the local store, no database servers, no ORMs (no Prisma, no Drizzle). The only server route is the stateless AI proxy above.
 - Auth, accounts, multi-user anything
-- Community/social features, payments, AI features, habits tracking
+- Community/social features, payments, habits tracking
 - Service worker / PWA install flow (deferred — adds friction with the dev server and isn't needed for a localhost demo)
 - Real sync. Dexie is the only persistence layer in this phase.
 
@@ -35,13 +36,14 @@ Out of scope (do NOT build, even if it seems easy or tempting):
 - Zod for schemas and validation — TS types derive from Zod via `z.infer`
 - Zustand only for ephemeral UI state (open dialogs, filters, view options); anything persistent lives in Dexie
 - date-fns for date math; `crypto.randomUUID()` for ids (no uuid package)
+- `@anthropic-ai/sdk` for the optional Claude assistant (used only in the `/api/chat` proxy route; BYO key)
 - pnpm as the package manager
 
 ## Architecture rules
 
 1. **The repository pattern is law.** All persistence goes through interfaces in `src/lib/data/repositories/` (e.g. `GoalRepository`, `TaskRepository`). UI components and hooks never import Dexie directly. The Dexie implementation lives in `src/lib/data/dexie/`. Reason: a later phase swaps Dexie for a PowerSync/SQLite client — that swap must only touch `src/lib/data/`.
 2. **Every record is sync-ready.** All tables share these fields: `id` (UUID string), `userId` (the constant `"local"` for now), `createdAt` + `updatedAt` (ISO strings), `deletedAt` (ISO string or null). Deletes are soft: set `deletedAt`, never remove rows. All queries filter out soft-deleted rows.
-3. **Client-side data, server-rendered shell.** Pages are thin RSC shells; everything that touches data is a client component. Never fetch or read app data on the server.
+3. **Client-side data, server-rendered shell.** Pages are thin RSC shells; everything that touches data is a client component. Never fetch or read app data on the server — including the `/api/chat` AI proxy, which receives its context from the client and never opens IndexedDB.
 4. One Zod schema per entity in `src/lib/data/schemas.ts` is the single source of truth. Mutations validate with Zod before writing and always bump `updatedAt`.
 5. Import/export must round-trip losslessly: export the full database to a single versioned JSON file; import validates with Zod and replaces local state.
 
@@ -61,11 +63,13 @@ Tree depth for goals is exactly three levels (north_star → long_term → quart
 
 Routes (App Router):
 
-- `/` — Dashboard: today's tasks, active quarter goals, next milestone
+- `/` — Dashboard: projects overview graph, today's tasks, active quarter goals, next milestone
+- `/projects` — project list with create/edit/archive; `/projects/[id]` — project hub (its tasks, milestones, linked goal)
 - `/goals` — tree view with inline add/edit, expand/collapse, status chips
 - `/tasks` — three-column kanban (todo / doing / done)
 - `/roadmap` — milestone timeline grouped by project, quarter and half-year zoom
 - `/review` — start or continue this week's review; list of past entries
+- `/assistant` — chat with Claude about the workspace (BYO Anthropic key); backed by the `/api/chat` proxy route
 - `/settings` — export JSON, import JSON, reset & reseed
 
 Layout: MUI app shell — permanent nav drawer on desktop, bottom navigation on mobile widths.
@@ -97,9 +101,44 @@ Layout: MUI app shell — permanent nav drawer on desktop, bottom navigation on 
 - A fresh browser profile gets seed data that demonstrates every feature
 - `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test` all pass
 
+## Milestones
+
+Demo v1 ships as ordered milestones. Each is a working, committed increment
+that passes `pnpm typecheck` and `pnpm lint` (and `pnpm test` whenever it
+touches the data layer). Status is kept current here as work lands.
+
+- **Milestone 1 — Foundation & data layer** ✅ done
+  - Next.js (App Router, `src/`) + TypeScript strict + MUI scaffold with a
+    light/dark CSS-variables theme
+  - Data layer: Zod schemas (single source of truth), repository interfaces, a
+    Dexie implementation behind a composition root, soft deletes, and versioned
+    JSON export/import — all sync-ready
+  - First-run seed covering every feature; Vitest data-layer tests
+  - Live dashboard (today's tasks · active quarter goals · next milestone)
+    reading through repositories with `useLiveQuery`
+- **Milestone 2 — App shell & navigation** ✅ done
+  - MUI app shell: permanent nav drawer on desktop, bottom navigation on mobile
+  - All section routes scaffolded with designed placeholder/empty states
+  - Manual light/dark mode toggle
+- **Milestone 3 — Goals** ✅ done
+  - 3-level tree (north star → long-term → quarter) with expand/collapse,
+    inline add/edit, status chips, and archive (cascading soft delete)
+- **Milestone 4 — Tasks** ✅ done
+  - Three-column kanban (todo / doing / done); move tasks across columns
+- **Milestone 5 — Roadmap** ✅ done
+  - Milestones on a horizontal timeline grouped by project; quarter and
+    half-year zoom
+- **Milestone 6 — Weekly review** ✅ done
+  - Guided flow (wins / blockers / lessons / next focus) saved as entries, with
+    browsable history
+- **Milestone 7 — Settings & data portability** ✅ done
+  - Export JSON, import JSON (Zod-validated), reset & reseed
+- **Milestone 8 — Polish & definition-of-done pass**
+  - Dashboard/empty-state refinement and the full Definition-of-done checklist
+
 ## Working style
 
 - Before any large change, present a short plan with the files you'll touch; wait for approval on the initial scaffold plan
-- Build order: data layer + seed → app shell + theme → goals → tasks → dashboard → roadmap → review → settings/export
+- Build order: follow the numbered Milestones above (foundation + data → app shell → goals → tasks → roadmap → review → settings → polish)
 - Prefer the dependencies listed above; if you must add one, state why in the commit message
 - Update this file whenever an architecture decision changes
