@@ -6,6 +6,8 @@ import Anthropic from "@anthropic-ai/sdk";
 // request body or the ANTHROPIC_API_KEY env var.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Vercel: allow long Claude responses (Hobby tier caps at 60s).
+export const maxDuration = 60;
 
 interface ChatRequest {
   apiKey?: string;
