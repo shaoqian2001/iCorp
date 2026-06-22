@@ -18,7 +18,7 @@ In scope (this list is exhaustive — do not build features outside it):
 - Dashboard: today's tasks + active quarter goals + next upcoming milestone
 - Seed data on first run; JSON export/import; "reset & reseed" in settings
 - All data persists in the browser (IndexedDB) across reloads
-- AI assistant: chat with Claude about your workspace. Bring-your-own Anthropic API key (a pay-as-you-go key, not a Claude.ai subscription), stored only in the browser. A single localhost route (`/api/chat`) proxies to the Anthropic API; it is a stateless relay and never reads local app data — the workspace context is assembled client-side and passed in as the system prompt.
+- AI assistant: chat with an AI about your workspace. Bring-your-own API key — either Anthropic directly (a pay-as-you-go key, not a Claude.ai subscription) or an OpenAI-compatible provider such as OpenRouter — selected and stored per provider in the browser. A single route (`/api/chat`) proxies to the chosen provider; it is a stateless relay and never reads local app data — the workspace context is assembled client-side and passed in as the system prompt.
 
 Out of scope (do NOT build, even if it seems easy or tempting):
 
