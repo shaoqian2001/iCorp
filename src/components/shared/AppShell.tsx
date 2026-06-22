@@ -22,6 +22,7 @@ import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import ViewKanbanOutlinedIcon from "@mui/icons-material/ViewKanbanOutlined";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
@@ -43,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/projects", label: "Projects", icon: <FolderOutlinedIcon /> },
   { href: "/goals", label: "Goals", icon: <FlagOutlinedIcon /> },
   { href: "/tasks", label: "Tasks", icon: <ViewKanbanOutlinedIcon /> },
+  { href: "/calendar", label: "Calendar", icon: <CalendarMonthOutlinedIcon /> },
   { href: "/roadmap", label: "Roadmap", icon: <TimelineOutlinedIcon /> },
   { href: "/review", label: "Review", icon: <RateReviewOutlinedIcon /> },
   { href: "/assistant", label: "Assistant", icon: <AutoAwesomeOutlinedIcon /> },

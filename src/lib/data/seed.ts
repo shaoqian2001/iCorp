@@ -1,6 +1,8 @@
 import { addDays, addMonths, format, startOfWeek, subDays, subWeeks } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 import { db } from "./dexie/db";
 import {
+  eventRepository,
   goalRepository,
   milestoneRepository,
   projectRepository,
@@ -246,6 +248,34 @@ export async function seedDatabase(): Promise<void> {
       blockers: "Spread too thin across content and product.",
       lessons: "Batch similar work; protect deep-work mornings.",
       nextFocus: "Public launch prep and 3 customer interviews.",
+    }),
+  ]);
+
+  // --- Calendar events across time zones -----------------------------------
+  // Wall-time in a zone -> absolute UTC instant for storage.
+  const at = (daysAhead: number, time: string, tz: string) =>
+    fromZonedTime(`${isoDate(addDays(today, daysAhead))}T${time}:00`, tz).toISOString();
+  await Promise.all([
+    eventRepository.create({
+      title: "Customer interview — Acme",
+      start: at(2, "15:00", "America/New_York"),
+      end: at(2, "15:45", "America/New_York"),
+      timeZone: "America/New_York",
+      projectId: pResearch.id,
+      notes: "Pricing and jobs-to-be-done.",
+    }),
+    eventRepository.create({
+      title: "Public launch go-live",
+      start: at(14, "09:00", "Europe/London"),
+      timeZone: "Europe/London",
+      projectId: pMvp.id,
+    }),
+    eventRepository.create({
+      title: "Deep work — writing block",
+      start: at(1, "08:00", "Asia/Singapore"),
+      end: at(1, "10:00", "Asia/Singapore"),
+      timeZone: "Asia/Singapore",
+      projectId: pContent.id,
     }),
   ]);
 }

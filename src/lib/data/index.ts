@@ -1,4 +1,5 @@
 import {
+  DexieEventRepository,
   DexieGoalRepository,
   DexieMilestoneRepository,
   DexieProjectRepository,
@@ -7,6 +8,7 @@ import {
   DexieTaskRepository,
 } from "./dexie/repositories";
 import type {
+  EventRepository,
   GoalRepository,
   MilestoneRepository,
   ProjectRepository,
@@ -26,10 +28,12 @@ export const milestoneRepository: MilestoneRepository =
 export const taskRepository: TaskRepository = new DexieTaskRepository();
 export const reviewRepository: ReviewRepository = new DexieReviewRepository();
 export const sourceRepository: SourceRepository = new DexieSourceRepository();
+export const eventRepository: EventRepository = new DexieEventRepository();
 
 export * from "./schemas";
 export type {
   Repository,
+  EventRepository,
   GoalRepository,
   MilestoneRepository,
   ProjectRepository,

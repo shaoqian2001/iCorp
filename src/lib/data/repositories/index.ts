@@ -1,4 +1,6 @@
 import type {
+  CalendarEvent,
+  CalendarEventInput,
   Goal,
   GoalHorizon,
   GoalInput,
@@ -57,4 +59,9 @@ export interface ReviewRepository extends Repository<ReviewEntry, ReviewEntryInp
 
 export interface SourceRepository extends Repository<Source, SourceInput> {
   listByProject(projectId: string): Promise<Source[]>;
+}
+
+export interface EventRepository
+  extends Repository<CalendarEvent, CalendarEventInput> {
+  listByProject(projectId: string): Promise<CalendarEvent[]>;
 }

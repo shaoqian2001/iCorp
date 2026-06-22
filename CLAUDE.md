@@ -18,6 +18,7 @@ In scope (this list is exhaustive — do not build features outside it):
 - Dashboard: today's tasks + active quarter goals + next upcoming milestone
 - Seed data on first run; JSON export/import; "reset & reseed" in settings
 - All data persists in the browser (IndexedDB) across reloads
+- Calendar: month view of events with start/end times and IANA time-zone support — each event stores its own zone, and the calendar renders in a selectable display zone
 - AI assistant: chat with an AI about your workspace. Bring-your-own API key — either Anthropic directly (a pay-as-you-go key, not a Claude.ai subscription) or an OpenAI-compatible provider such as OpenRouter — selected and stored per provider in the browser. A single route (`/api/chat`) proxies to the chosen provider; it is a stateless relay and never reads local app data — the workspace context is assembled client-side and passed in as the system prompt.
 
 Out of scope (do NOT build, even if it seems easy or tempting):
@@ -35,7 +36,7 @@ Out of scope (do NOT build, even if it seems easy or tempting):
 - Dexie.js (IndexedDB) + `dexie-react-hooks` `useLiveQuery` for reactive local queries
 - Zod for schemas and validation — TS types derive from Zod via `z.infer`
 - Zustand only for ephemeral UI state (open dialogs, filters, view options); anything persistent lives in Dexie
-- date-fns for date math; `crypto.randomUUID()` for ids (no uuid package)
+- date-fns for date math; `date-fns-tz` for time-zone conversions (calendar); `crypto.randomUUID()` for ids (no uuid package)
 - `@anthropic-ai/sdk` for the optional Claude assistant (used only in the `/api/chat` proxy route; BYO key)
 - pnpm as the package manager
 
@@ -56,6 +57,8 @@ All entities also carry the standard fields from Architecture rule 2.
 - `Milestone`: `projectId`, `title`, `date` (ISO), `status: "planned" | "hit" | "missed"`
 - `Task`: `goalId?`, `projectId?`, `title`, `notes?`, `status: "todo" | "doing" | "done"`, `dueDate?`, `sortOrder`
 - `ReviewEntry`: `weekStart` (ISO date of Monday), `wins`, `blockers`, `lessons`, `nextFocus` (all strings)
+- `Source`: `projectId`, `title`, `url?`, `authors?`, `kind: "paper" | "article" | "book" | "dataset" | "web" | "other"`, `status: "to_read" | "reading" | "read"`, `notes?` (research reading list)
+- `CalendarEvent`: `title`, `start` (UTC ISO instant), `end?` (UTC ISO instant), `allDay`, `timeZone` (IANA), `notes?`, `projectId?`
 
 Tree depth for goals is exactly three levels (north_star → long_term → quarter); enforce in validation.
 
@@ -67,6 +70,7 @@ Routes (App Router):
 - `/projects` — project list with create/edit/archive; `/projects/[id]` — project hub (its tasks, milestones, linked goal)
 - `/goals` — tree view with inline add/edit, expand/collapse, status chips
 - `/tasks` — three-column kanban (todo / doing / done)
+- `/calendar` — month calendar; multi-time-zone (per-event zone + a display-zone selector)
 - `/roadmap` — milestone timeline grouped by project, quarter and half-year zoom
 - `/review` — start or continue this week's review; list of past entries
 - `/assistant` — chat with Claude about the workspace (BYO Anthropic key); backed by the `/api/chat` proxy route
