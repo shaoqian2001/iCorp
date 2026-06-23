@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../dexie/db";
 import {
+  eventRepository,
   exportDatabase,
   goalRepository,
   importDatabase,
@@ -34,6 +35,12 @@ async function seedSample(): Promise<void> {
     title: "A source",
     kind: "paper",
     status: "reading",
+  });
+  await eventRepository.create({
+    projectId: project.id,
+    title: "Kickoff call",
+    start: "2026-07-01T13:00:00.000Z",
+    timeZone: "America/New_York",
   });
   await milestoneRepository.create({
     projectId: project.id,

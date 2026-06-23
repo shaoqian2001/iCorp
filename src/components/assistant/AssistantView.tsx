@@ -19,13 +19,16 @@ import SendIcon from "@mui/icons-material/Send";
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
 import { buildSystemPrompt, buildWorkspaceContext } from "@/lib/ai/context";
 import {
-  DEFAULT_MODEL,
-  MODEL_OPTIONS,
+  PROVIDERS,
+  PROVIDER_MODELS,
   clearApiKey,
   getApiKey,
   getModel,
+  getProvider,
   setApiKey,
   setModel,
+  setProvider,
+  type Provider,
 } from "@/lib/ai/settings";
 
 interface ChatMessage {
@@ -34,9 +37,10 @@ interface ChatMessage {
 }
 
 export function AssistantView() {
+  const [provider, setProviderState] = useState<Provider>("anthropic");
   const [apiKey, setApiKeyState] = useState<string | null>(null);
   const [keyDraft, setKeyDraft] = useState("");
-  const [model, setModelState] = useState(DEFAULT_MODEL);
+  const [model, setModelState] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,32 +50,44 @@ export function AssistantView() {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setApiKeyState(getApiKey() || null);
-    setModelState(getModel());
+    const initial = getProvider();
+    setProviderState(initial);
+    setApiKeyState(getApiKey(initial) || null);
+    setModelState(getModel(initial));
   }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const providerInfo = PROVIDERS.find((p) => p.id === provider) ?? PROVIDERS[0];
+
+  const changeProvider = (next: Provider) => {
+    setProvider(next);
+    setProviderState(next);
+    setApiKeyState(getApiKey(next) || null);
+    setModelState(getModel(next));
+    setKeyDraft("");
+  };
+
   const saveKey = () => {
     const value = keyDraft.trim();
     if (!value) return;
-    setApiKey(value);
+    setApiKey(provider, value);
     setApiKeyState(value);
     setKeyDraft("");
     setShowKeyField(false);
   };
 
   const forgetKey = () => {
-    clearApiKey();
+    clearApiKey(provider);
     setApiKeyState(null);
     setMessages([]);
   };
 
   const changeModel = (value: string) => {
     setModelState(value);
-    setModel(value);
+    setModel(provider, value);
   };
 
   const send = async () => {
@@ -90,6 +106,7 @@ export function AssistantView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider,
           apiKey,
           model,
           system: buildSystemPrompt(context),
@@ -113,10 +130,7 @@ export function AssistantView() {
           const next = [...prev];
           const last = next[next.length - 1];
           if (last && last.role === "assistant") {
-            next[next.length - 1] = {
-              ...last,
-              content: last.content + delta,
-            };
+            next[next.length - 1] = { ...last, content: last.content + delta };
           }
           return next;
         });
@@ -142,7 +156,6 @@ export function AssistantView() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
-      // drop the empty assistant placeholder on failure
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (last && last.role === "assistant" && last.content === "") {
@@ -155,7 +168,50 @@ export function AssistantView() {
     }
   };
 
-  // --- Setup gate: no key yet -------------------------------------------------
+  const providerSelect = (
+    <TextField
+      select
+      size="small"
+      label="Provider"
+      value={provider}
+      onChange={(e) => changeProvider(e.target.value as Provider)}
+      sx={{ minWidth: 190 }}
+    >
+      {PROVIDERS.map((p) => (
+        <MenuItem key={p.id} value={p.id}>
+          {p.label}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+
+  const modelField = providerInfo.freeformModel ? (
+    <TextField
+      size="small"
+      label="Model"
+      value={model}
+      onChange={(e) => changeModel(e.target.value)}
+      placeholder="e.g. openai/gpt-4o-mini"
+      sx={{ minWidth: 240 }}
+    />
+  ) : (
+    <TextField
+      select
+      size="small"
+      label="Model"
+      value={model}
+      onChange={(e) => changeModel(e.target.value)}
+      sx={{ minWidth: 240 }}
+    >
+      {PROVIDER_MODELS[provider].map((option) => (
+        <MenuItem key={option.id} value={option.id}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+
+  // --- Setup gate: no key for the selected provider --------------------------
   if (apiKey === null) {
     return (
       <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 3, sm: 6 }, maxWidth: 640, mx: "auto" }}>
@@ -167,38 +223,41 @@ export function AssistantView() {
             Assistant
           </Typography>
           <Typography color="text.secondary">
-            Chat with Claude about your workspace.
+            Chat with an AI about your workspace.
           </Typography>
         </Stack>
         <Card variant="outlined">
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Connect your Anthropic API key
+              Connect an API key
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2 }}>
-              This uses a pay-as-you-go Anthropic API key (not a Claude.ai
-              subscription). Create one at{" "}
-              <Link href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">
-                console.anthropic.com
+              Use a pay-as-you-go API key from your chosen provider. Create one
+              at{" "}
+              <Link href={providerInfo.keysUrl} target="_blank" rel="noopener">
+                {providerInfo.keysUrl.replace("https://", "")}
               </Link>
-              . Your key is stored only in this browser, sent to this app&apos;s
-              own localhost route, and is never included in your data export.
+              . The key is stored only in this browser, sent to this app&apos;s
+              own proxy route, and is never included in your data export.
             </Typography>
-            <Stack direction="row" spacing={1}>
-              <TextField
-                fullWidth
-                type="password"
-                size="small"
-                label="sk-ant-…"
-                value={keyDraft}
-                onChange={(e) => setKeyDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") saveKey();
-                }}
-              />
-              <Button variant="contained" onClick={saveKey} disabled={!keyDraft.trim()}>
-                Save
-              </Button>
+            <Stack spacing={2}>
+              {providerSelect}
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  fullWidth
+                  type="password"
+                  size="small"
+                  label={providerInfo.keyHint}
+                  value={keyDraft}
+                  onChange={(e) => setKeyDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveKey();
+                  }}
+                />
+                <Button variant="contained" onClick={saveKey} disabled={!keyDraft.trim()}>
+                  Save
+                </Button>
+              </Stack>
             </Stack>
           </CardContent>
         </Card>
@@ -213,14 +272,14 @@ export function AssistantView() {
         display: "flex",
         flexDirection: "column",
         height: "calc(100vh - 64px)",
-        maxWidth: 820,
+        maxWidth: 860,
         mx: "auto",
         px: { xs: 1.5, sm: 3 },
       }}
     >
       <Stack
-        direction="row"
-        alignItems="center"
+        direction={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "stretch", sm: "center" }}
         justifyContent="space-between"
         spacing={1}
         sx={{ py: 2 }}
@@ -228,21 +287,10 @@ export function AssistantView() {
         <Typography variant="h5" component="h1">
           Assistant
         </Typography>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            select
-            size="small"
-            value={model}
-            onChange={(e) => changeModel(e.target.value)}
-            sx={{ minWidth: 220 }}
-          >
-            {MODEL_OPTIONS.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Tooltip title="Change API key">
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          {providerSelect}
+          {modelField}
+          <Tooltip title="API key">
             <IconButton onClick={() => setShowKeyField((v) => !v)} aria-label="API key settings">
               <KeyOutlinedIcon />
             </IconButton>
@@ -260,8 +308,7 @@ export function AssistantView() {
             </Button>
           }
         >
-          Your key is stored locally in this browser. Use &quot;Forget key&quot;
-          to remove it.
+          Your {providerInfo.label} key is stored locally in this browser.
         </Alert>
       )}
 

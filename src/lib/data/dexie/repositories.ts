@@ -1,6 +1,8 @@
 import { db } from "./db";
 import { DexieRepository } from "./base-repository";
 import {
+  eventInputSchema,
+  eventSchema,
   goalInputSchema,
   goalSchema,
   milestoneInputSchema,
@@ -15,6 +17,8 @@ import {
   taskSchema,
 } from "../schemas";
 import type {
+  CalendarEvent,
+  CalendarEventInput,
   Goal,
   GoalHorizon,
   GoalInput,
@@ -31,6 +35,7 @@ import type {
   TaskStatus,
 } from "../schemas";
 import type {
+  EventRepository,
   GoalRepository,
   MilestoneRepository,
   ProjectRepository,
@@ -182,6 +187,21 @@ export class DexieSourceRepository
   listByProject(projectId: string): Promise<Source[]> {
     return this.list().then((sources) =>
       sources.filter((source) => source.projectId === projectId),
+    );
+  }
+}
+
+export class DexieEventRepository
+  extends DexieRepository<CalendarEvent, CalendarEventInput>
+  implements EventRepository
+{
+  constructor() {
+    super(db.events, eventInputSchema, eventSchema);
+  }
+
+  listByProject(projectId: string): Promise<CalendarEvent[]> {
+    return this.list().then((events) =>
+      events.filter((event) => event.projectId === projectId),
     );
   }
 }

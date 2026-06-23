@@ -184,3 +184,25 @@ export const sourceInputSchema = sourceObject.omit(SYNC_OMIT);
 
 export type Source = z.infer<typeof sourceSchema>;
 export type SourceInput = z.input<typeof sourceInputSchema>;
+
+// --- CalendarEvent ----------------------------------------------------------
+// `start`/`end` are absolute UTC instants; `timeZone` is the IANA zone the
+// event was entered in, so it can be shown in its original zone alongside the
+// viewer's chosen display zone.
+
+const eventObject = z.object({
+  ...syncFields,
+  title: z.string().min(1),
+  start: z.string().datetime(),
+  end: z.string().datetime().optional(),
+  allDay: z.boolean().default(false),
+  timeZone: z.string().min(1),
+  notes: z.string().optional(),
+  projectId: z.string().uuid().nullable().default(null),
+});
+
+export const eventSchema = eventObject;
+export const eventInputSchema = eventObject.omit(SYNC_OMIT);
+
+export type CalendarEvent = z.infer<typeof eventSchema>;
+export type CalendarEventInput = z.input<typeof eventInputSchema>;

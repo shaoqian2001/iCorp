@@ -1,5 +1,6 @@
 import Dexie, { type Table } from "dexie";
 import type {
+  CalendarEvent,
   Goal,
   Milestone,
   Project,
@@ -21,6 +22,7 @@ export class SoloStudioDB extends Dexie {
   tasks!: Table<Task, string>;
   reviews!: Table<ReviewEntry, string>;
   sources!: Table<Source, string>;
+  events!: Table<CalendarEvent, string>;
 
   constructor() {
     super("solo-studio");
@@ -49,6 +51,10 @@ export class SoloStudioDB extends Dexie {
             if (project.type === undefined) project.type = "personal";
           });
       });
+    // v3: calendar events (new table; existing tables carry forward).
+    this.version(3).stores({
+      events: "id, start, projectId",
+    });
   }
 }
 
