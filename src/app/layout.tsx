@@ -4,6 +4,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { Providers } from "@/components/shared/Providers";
 import { DataBootstrap } from "@/components/shared/DataBootstrap";
+import { CloudAutoBackup } from "@/components/shared/CloudAutoBackup";
 import { AppShell } from "@/components/shared/AppShell";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AppRouterCacheProvider>
           <Providers>
             <DataBootstrap />
+            <CloudAutoBackup />
             <AppShell>{children}</AppShell>
           </Providers>
         </AppRouterCacheProvider>

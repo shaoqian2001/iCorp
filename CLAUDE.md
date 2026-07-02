@@ -20,11 +20,12 @@ In scope (this list is exhaustive — do not build features outside it):
 - All data persists in the browser (IndexedDB) across reloads
 - Calendar: month view of events with start/end times and IANA time-zone support — each event stores its own zone, and the calendar renders in a selectable display zone
 - AI assistant: chat with an AI about your workspace. Bring-your-own API key — either Anthropic directly (a pay-as-you-go key, not a Claude.ai subscription) or an OpenAI-compatible provider such as OpenRouter — selected and stored per provider in the browser. A single route (`/api/chat`) proxies to the chosen provider; it is a stateless relay and never reads local app data — the workspace context is assembled client-side and passed in as the system prompt.
+- Accounts & cloud backup (optional): GitHub sign-in via Auth.js; when signed in, back up / restore the full workspace snapshot to Postgres (Neon / Vercel), with optional auto-backup. The app stays fully usable offline without an account — signing in only enables cross-device backup.
 
 Out of scope (do NOT build, even if it seems easy or tempting):
 
-- Backend for app data: no API routes that read/write the local store, no database servers, no ORMs (no Prisma, no Drizzle). The only server route is the stateless AI proxy above.
-- Auth, accounts, multi-user anything
+- Per-record app backend: no database of individual goals/tasks/etc., no ORMs (no Prisma, no Drizzle). Server routes are limited to the AI proxy (`/api/chat`), Auth.js (`/api/auth/*`), and the workspace-snapshot backup (`/api/workspace`) — which stores an opaque per-user JSON blob and never reads the local store.
+- Multi-user collaboration or sharing (accounts are single-user, for personal cloud backup only)
 - Community/social features, payments, habits tracking
 - Service worker / PWA install flow (deferred — adds friction with the dev server and isn't needed for a localhost demo)
 - Real sync. Dexie is the only persistence layer in this phase.
@@ -38,6 +39,7 @@ Out of scope (do NOT build, even if it seems easy or tempting):
 - Zustand only for ephemeral UI state (open dialogs, filters, view options); anything persistent lives in Dexie
 - date-fns for date math; `date-fns-tz` for time-zone conversions (calendar); `crypto.randomUUID()` for ids (no uuid package)
 - `@anthropic-ai/sdk` for the optional Claude assistant (used only in the `/api/chat` proxy route; BYO key)
+- `next-auth` (Auth.js v5, GitHub provider, JWT sessions) for optional sign-in; `@neondatabase/serverless` for the per-user cloud-backup store
 - pnpm as the package manager
 
 ## Architecture rules

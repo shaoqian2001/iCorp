@@ -29,6 +29,7 @@ import {
   reviewRepository,
   taskRepository,
 } from "@/lib/data";
+import { CloudSyncPanel } from "./CloudSyncPanel";
 
 type Feedback = { severity: "success" | "error"; message: string } | null;
 
@@ -125,6 +126,8 @@ export function SettingsView() {
       </Stack>
 
       <Stack spacing={3}>
+        <CloudSyncPanel />
+
         {counts ? (
           <Card variant="outlined">
             <CardContent>
