@@ -29,6 +29,7 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { ColorModeToggle } from "./ColorModeToggle";
+import { AccountMenu } from "./AccountMenu";
 
 const DRAWER_WIDTH = 240;
 const MORE_VALUE = "__more__";
@@ -87,6 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Typography variant="h6" component="span" sx={{ flexGrow: 1 }}>
             Solo Studio
           </Typography>
+          <AccountMenu />
           <ColorModeToggle />
         </Toolbar>
       </AppBar>
